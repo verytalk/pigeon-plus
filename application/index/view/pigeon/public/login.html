@@ -1,0 +1,43 @@
+
+
+<div class="container">
+    <div class="row">
+        <div class="col-sm-12 logo">
+            <h2><a href="?">{$siteConfig.sitename}</a></h2>
+            <p>{$siteConfig.description}</p>
+            <hr>
+        </div>
+        <div class="col-sm-9">
+<center>
+    <h3>登录 {$siteConfig.sitename} </h3>
+    <p>登录之后即可发表内容</p>
+    <div class="row">
+        <div class="col-sm-3"></div>
+        <div class="col-sm-6">
+        {if condition="$message neq '' "}
+        <div class='alert alert-{$message.alert}'>{$message.content}</div>
+        {/if}
+        <form method="POST" action="{:url('login/dologin')}">
+            <input type="hidden" name="seid" value="{$seid}"/>
+            <div class="input-group">
+                <span class="input-group-addon" style="border-radius: 6px 0px 0px 0px;"><i class="fa fa-user" style="width: 16px;"></i></span>
+                <input type="text" placeholder="账号" name="username" class="form-control" required style="box-shadow: none;height: 42px;border-radius: 0px 6px 0px 0px;">
+            </div>
+            <div class="input-group">
+                <span class="input-group-addon" style="border-top: 0px;border-radius: 0px 0px 0px 6px;"><i class="fa fa-key" style="width: 16px;"></i></span>
+                <input type="password" placeholder="密码" name="password" class="form-control" required style="box-shadow: none;height: 41px;border-radius: 0px 0px 6px 0px;border-top: 0px;">
+            </div>
+            <br>
+            
+<!-- if($pigeon->config['recaptcha_key'] !== '') {-->
+            
+<!--            <div class="g-recaptcha" data-sitekey=" echo $pigeon->config['recaptcha_key']; "></div>-->
+<!--            <br>-->
+<!--  -->
+<!--								-->
+            <p><button type="submit" class="btn btn-primary" style="width: 100%;">登录</button></p>
+            <p>还没有账号？<a href="{:url('register/index')}">立即注册！</a></p>
+        </form>
+    </div>
+    <div class="col-sm-3"></div>
+</center>

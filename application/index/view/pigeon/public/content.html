@@ -1,0 +1,431 @@
+<div class="container">
+    <div class="row">
+        <div class="col-sm-12 logo">
+            <h2><a href="?">{$siteConfig.sitename}</a></h2>
+            <p>{$siteConfig.description}</p>
+            <hr>
+        </div>
+        <div class="col-sm-9">
+            {if($user)}
+            <p><textarea class="form-control newpost" placeholder="在想些什么？" id="newpost"></textarea></p>
+            <table style="width: 100%;">
+                <tr>
+                    <td style="width: 40%;">
+                        <select class="form-control" id="ispublic">
+                            <option value="2">仅自己可见</option>
+                            <option value="0">所有人可见</option>
+                            <option value="1">登录后可见</option>
+                        </select>
+                    </td>
+                    <td>
+                        <!--<input type="checkbox" checked="checked" id="ispublic" style="margin-top: 8px;">&nbsp;&nbsp;公开消息（无需登录即可查看）</input>-->
+                        <button class="btn btn-primary pull-right" onclick="newpost()"><i class="fa fa-twitter"></i>&nbsp;&nbsp;立即发布</button>
+                    </td>
+                </tr>
+            </table>
+            <hr>
+                <center>
+                    <p><a href="{:url('index/index')}">公共时间线</a>&nbsp;&nbsp;|&nbsp;&nbsp;<a href="{:url('index/index',['isMe'=>1])}">我的时间线</a></p>
+                </center>
+            {/if}
+            <div id="alert_success"></div>
+            <div id="alert_danger"></div>
+
+            <div id="pagecontent">
+                <table style="width: 100%;">
+                    <tbody>
+                    </tbody>
+                </table>
+
+                <center class="loadMore load" style="display:none"><p style="cursor: pointer;" onclick="loadMore(current_page)">加载更多</p></center>
+                <center class="loadOver load" style="display:none"><p>已经到底啦~</p></center>
+                <center class="noPost load" style="display:none"><p>这是一只寂寞的鸽子，暂时没有人咕咕咕！~</p></center>
+            </div>
+
+<script type="text/javascript">
+    var current_page = '1';
+    loadMore(current_page);
+    var seid = '{$seid}';
+    var setting_auto_refresh = "{$siteConfig.setting_auto_refresh}";
+    var auto_refresh = true;
+    var ptime = '';
+    var psearch = '';
+    var storage = '';
+    var current_id = '';
+    var dismiss_success = '<div class="alert alert-success alert-dismissable"><button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>';
+    var dismiss_danger = '<div class="alert alert-danger alert-dismissable"><button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>';
+    var isblur = false;
+    var pagetitle = document.title;
+    hljs.initHighlightingOnLoad();
+
+    function setTime() {
+        ptime = $("#time").val();
+        loadMoreCommon(1,"","search");
+    }
+
+    function search() {
+        auto_refresh = false;
+        psearch = $("#search").val();
+        current_page = 1;
+        loadMoreCommon(1,"","search");
+    }
+
+    function newpost() {
+        var htmlobj = $.ajax({
+            type: 'POST',
+            url: "{:url('index/newpost',['seid'=>$seid ])}",
+            data: {
+                ispublic: $("#ispublic").val(),
+                content: $("#newpost").val()
+            },
+            async:true,
+            error: function() {
+                var responseJson =  $.parseJSON(htmlobj.responseText);
+                alert("错误：" + responseJson.msg);
+                return;
+            },
+            success: function() {
+                var responseJson =  $.parseJSON(htmlobj.responseText);
+                if(responseJson.status == "200"){
+                    $("#newpost").val("");
+                    RefreshHome();
+                }else{
+                    alert(responseJson.msg);
+                }
+                return;
+            }
+        });
+    }
+
+    function RefreshHome() {
+        loadMoreCommon(1,storage,"refresh")
+    }
+
+    function loadMore(page){
+        auto_refresh = true;
+        loadMoreCommon(page,"","load");
+    }
+
+
+
+    function loadMoreCommon(page,id,type) {
+        var html = "";
+
+        if(type == "search"){
+            current_id = "";
+        }
+
+        if(type != "refresh"){
+            $(".load").css({display:'none'});
+        }
+
+        var newPage = parseInt(page);
+        var htmlobj = $.ajax({
+            type: 'POST',
+            url: "{:url('index/index',['isMe'=>$isMe ])}",
+            data: {
+                ajax: 1,
+                page: newPage,
+                time: ptime,
+                id: id,
+                current_id:current_id,
+                search: psearch
+            },
+            async:true,
+            error: function() {
+                return;
+            },
+            success: function() {
+                var ids = "";
+                var responseJson =  $.parseJSON(htmlobj.responseText);
+
+                if(responseJson.status != "200" || responseJson.data == ""){
+                    if(type == "load"){
+                        $(".loadMore").css({display:'none'});
+                        if(newPage == 1){
+                            $(".noPost").show();
+                        }else{
+                            $(".loadOver").show();
+                        }
+                    }
+                    if(type == "search"){
+                        $("#pagecontent table tbody").html("");
+                        $(".noPost").show();
+                    }
+                }else{
+                    responseJson = responseJson.data;
+                    ids = responseJson.id;
+                    for(var p in responseJson){
+                        html +=  moreHtml(responseJson[p]);
+                    }
+                    if(html != "" ){
+                        $(".load").css({display:'none'});
+                        $(".loadMore").show();
+                        if(type == "search"){
+                            current_page = newPage + 1;
+                            if(page == 1) {
+                                $("#pagecontent table tbody").html(html);
+                            }else{
+                                $("#pagecontent table tbody").append(html);
+                            }
+                        }
+                        if(type == "refresh"){
+                            if(page == 1 && storage !=ids ){
+                                $("#pagecontent table tbody").prepend(html);
+
+                                if(isblur && storage != '') {
+                                    document.title = "[新消息] " + pagetitle;
+                                }
+                                storage = ids;
+                            }
+                        }
+                        if(type == "load"){
+                            if(newPage == 1){
+                                $("#pagecontent table tbody").html(html);
+                            }else{
+                                 $("#pagecontent table tbody").append(html);
+                            }
+                            current_page = newPage + 1;
+                        }
+                        if(storage == ""){
+                            storage = responseJson[0].id;
+                        }
+                        if(current_id == ""){
+                            current_id = responseJson[0].id;
+                        }
+                    }
+
+                    $('.message img').click(function() {
+                        imgsrc.src = this.src;
+                        $("#imgscan").fadeIn();
+                    });
+                }
+                return;
+            }
+        });
+    }
+
+    function deletepost(id) {
+        if(!confirm('确认删除吗？')){
+            return false;
+        }
+        auto_refresh = false;
+        var htmlobj = $.ajax({
+            type: 'POST',
+            url: "{:url('index/deletepost',['seid'=>$seid ])}",
+            data: {
+                id: id
+            },
+            async:true,
+            error: function() {
+                var responseJson =  $.parseJSON(htmlobj.responseText);
+                ErrorMsg("错误：" + responseJson.msg);
+                return;
+            },
+            success: function() {
+                var responseJson =  $.parseJSON(htmlobj.responseText);
+                if(responseJson.status == "200"){
+                    storage = '';
+                    SuccessMsg(responseJson.msg);
+                    loadMore(1);
+                }else{
+                    ErrorMsg(responseJson.msg);
+                }
+                return;
+            }
+        });
+    }
+    function changepublic(id, newstatus) {
+        auto_refresh = false;
+        var htmlobj = $.ajax({
+            type: 'POST',
+            url: "{:url('index/changepublic',['seid'=>$seid ])}",
+            data: {
+                id: id,
+                ispublic: newstatus
+            },
+            async:true,
+            error: function() {
+                var responseJson =  $.parseJSON(htmlobj.responseText);
+                ErrorMsg("错误：" + responseJson.msg);
+                return;
+            },
+            success: function() {
+                var responseJson =  $.parseJSON(htmlobj.responseText);
+                if(responseJson.status == "200"){
+                    storage = '';
+                    SuccessMsg(responseJson.msg);
+                    loadMore(1);
+                }else{
+                    ErrorMsg(responseJson.msg);
+                }
+                return;
+            }
+        });
+    }
+    function SuccessMsg(text) {
+        $("#alert_success").html(dismiss_success + text + "</div>");
+        $("#alert_success").fadeIn(500);
+    }
+    function ErrorMsg(text) {
+        $("#alert_danger").html(dismiss_danger + text + "</div>");
+        $("#alert_danger").fadeIn(500);
+    }
+    var editid = '';
+    var isopenmsgbox = false;
+    function showmsg(text) {
+        $("#messagebg").fadeIn(300);
+        $("#msgcontent").html(text);
+        isopenmsgbox = true;
+    }
+    function closemsg(){
+        if(isopenmsgbox) {
+            $("#messagebg").fadeOut(300);
+            isopenmsgbox = false;
+        }
+    };
+    function progressshow(text) {
+        $("#messagebg").fadeIn(300);
+        $("#msgcontent").text(text);
+    }
+    function progressunshow() {
+        $("#messagebg").fadeOut(300);
+    }
+    function edit(id) {
+        var htmlobj = $.ajax({
+            type: 'GET',
+            url: "{:url('index/getmsg',['seid'=>$seid ])}",
+            data: {
+                id: id
+            },
+            async:true,
+            error: function() {
+                ErrorMsg("错误：" + htmlobj.responseText);
+                return;
+            },
+            success: function() {
+                editid = id;
+                try {
+                    var responseData = JSON.parse(htmlobj.responseText);
+
+                    if(responseData.status == "200"){
+                        var data = responseData.data;
+                        var public_0 = "";
+                        var public_1 = "";
+                        var public_2 = "";
+                        switch(data.public) {
+                            case "0":
+                                var public_0 = ' selected="selected"';
+                                break;
+                            case "1":
+                                var public_1 = ' selected="selected"';
+                                break;
+                            case "2":
+                                var public_2 = ' selected="selected"';
+                                break;
+                        }
+                        showmsg('<p>请输入内容</p><p><textarea class="form-control newpost editpost" placeholder="在想些什么？" id="editpost">' + data.content.replace("<", "&lt;").replace(">", "&gt;").replace("&", "&amp;").replace(" ", "&nbsp;") + '</textarea></p><table style="width: 100%;margin-bottom: 12px;"><tr><td style="width: 40%;"><select class="form-control" id="edit_ispublic"><option value="0"' + public_0 + '>所有人可见</option><option value="1"' + public_1 + '>登录后可见</option><option value="2"' + public_2 + '>仅自己可见</option></select></td><td><button class="btn btn-primary pull-right" onclick="submitedit()"><i class="fa fa-twitter"></i>&nbsp;&nbsp;保存修改</button></td></tr></table>');
+                    }else{
+                        ErrorMsg(responseData.msg)
+                    }
+                } catch(e) {
+                    ErrorMsg("错误：" + e.message);
+                }
+                return;
+            }
+        });
+    }
+
+    function submitedit() {
+        var htmlobj = $.ajax({
+            type: 'POST',
+            url: "{:url('index/editpost',['seid'=>$seid ])}",
+            data: {
+                id:editid,
+                ispublic: $("#edit_ispublic").val(),
+                content: $("#editpost").val()
+            },
+            async:true,
+            error: function() {
+                closemsg();
+                var responseData = JSON.parse(htmlobj.responseText);
+                alert("错误：" + responseData.msg);
+                return;
+            },
+            success: function() {
+                var responseData = JSON.parse(htmlobj.responseText);
+                closemsg();
+                if(responseData.status == "200"){
+                    $("#editpost").val("");
+                    storage = '';
+                    SuccessMsg(responseData.msg);
+                    loadMore(1);
+                }else{
+                    ErrorMsg(responseData.msg);
+                }
+
+                return;
+            }
+        });
+    }
+
+
+    function moreHtml(data){
+        var html = '<tr>' +
+            '    <td class="headimg"><img src="__PUBLIC__/static/image/21232f297a57a5a743894a0e4a801fc3.jpg"></td>' +
+            '    <td class="thread">' +
+            '        <p>' +
+            '            <small> '+data.author + data.time+ '&nbsp;&nbsp;' +
+            '                <a href="?s=msg&amp;id=68" target="_blank">' +
+            '                    <i class="fa fa-external-link"></i>' +
+            '                </a>';
+            if(data.isSelf){
+                html += '&nbsp;&nbsp;<code>仅自己可见</code>' ;
+            }
+            if(data.isAuthor) {
+                html += '<span class="hoverdisplay">&nbsp;&nbsp;|&nbsp;&nbsp;' +
+                '<a style="cursor: pointer;" onclick="edit('+data.id+')">编辑</a>&nbsp;&nbsp;|&nbsp;&nbsp;' +
+                '<a style="cursor: pointer;" onclick="deletepost('+data.id+')">删除</a>&nbsp;&nbsp;|&nbsp;&nbsp;设置状态 &lt;' +
+                '<a style="cursor: pointer;" onclick="changepublic('+data.id+', 0)">公开</a> |' +
+                '<a style="cursor: pointer;" onclick="changepublic('+data.id+', 1)">登录可见</a> |' +
+                '<a style="cursor: pointer;" onclick="changepublic('+data.id+', 2)">仅作者可见</a>&gt;' +
+                '</span>' ;
+
+            }
+            html += '</small>' +
+            '</p>' +
+            '<div class="message">'+data.content+"   "+data.id+'</div>' +
+            '</td>' +
+            '</tr>';
+            return html;
+
+    }
+
+
+    /* Update end */
+    window.onload = function() {
+
+        if(setting_auto_refresh) {
+            setInterval(function() {
+                if(auto_refresh && setting_auto_refresh) {
+                    RefreshHome();
+                }
+            }, 10000);
+        }
+
+        $('pre code').each(function(i, block) {
+            hljs.highlightBlock(block);
+        });
+        $('.message img').click(function() {
+            imgsrc.src = this.src;
+            $("#imgscan").fadeIn();
+        });
+    }
+    window.onblur = function() {
+        isblur = true;
+    }
+    window.onfocus = function() {
+        isblur = false;
+        document.title = pagetitle;
+    }
+</script>

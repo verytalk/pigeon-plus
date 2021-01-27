@@ -1,0 +1,56 @@
+
+</div>
+<div class="col-sm-3">
+    <p>
+    <div class="input-group">
+        <input type="text" id="search" class="form-control" placeholder="搜索">
+        <span class="input-group-btn">
+            <button class="btn btn-primary" onclick="search()" style="height: 34px;"><i class="fa fa-search"></i></button>
+        </span>
+    </div>
+    </p>
+
+    {if condition="$user eq ''"}
+    <p>欢迎来到本站，请登陆。</p>
+    <div class="row">
+        <div class="col-sm-6">
+            <p><a href="{:url('login/index')}"><button class="btn btn-primary right-btn">立即登录</button></a></p>
+        </div>
+        <div class="col-sm-6">
+            <p><a href="{:url('register/index')}"><button class="btn btn-success right-btn">注册账号</button></a></p>
+        </div>
+    </div>
+
+    {else/}
+
+    <center>
+        <img src="__PUBLIC__/static/image/256.jpg" class="loginhead">
+    </center>
+    <h3>{$user} </h3>
+    <p>欢迎回来！<a href="{:url('login/logout')}">[退出登录]</a></p>
+    <p>你的 Token（可用于 API 发布）</p>
+    <p><pre> {$token}</pre></p>
+    {/if}
+
+    <hr>
+    <p><b>输入一个时间来进行筛选</b></p>
+    <p>时间格式：<?php echo date("Y-m-d H:i:s"); ?> </p>
+    <p>
+    <div class="input-group">
+        <input type="text" id="time" class="form-control">
+        <span class="input-group-btn">
+            <button class="btn btn-primary" placeholder="yyyy-mm-dd HH:ii:ss" onclick="setTime()">确定</button>
+        </span>
+    </div>
+    </p>
+</div>
+</div>
+<div class="row">
+    <div class="col-sm-12">
+        <hr>
+        <p>&copy; <?php echo date("Y"); ?> {$siteConfig.sitename} | Powered by <a href="https://github.com/kasuganosoras/Pigeon" target="_blank">Pigeon</a></p>
+    </div>
+</div>
+
+</body>
+</html>

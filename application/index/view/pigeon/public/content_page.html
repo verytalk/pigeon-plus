@@ -1,0 +1,28 @@
+{foreach $data as $vo}　
+<tr>
+    <td class="headimg"><img src="__PUBLIC__/static/image/21232f297a57a5a743894a0e4a801fc3.jpg"></td>
+    <td class="thread">
+        <p>
+            <small>{$vo.author} {$vo.time}&nbsp;&nbsp;
+                <a href="?s=msg&amp;id=68" target="_blank">
+                    <i class="fa fa-external-link"></i>
+                </a>
+                {if($vo.public eq 2)}
+                &nbsp;&nbsp;<code>仅自己可见</code>
+                {/if}
+                {if($isAdmin || $vo.author == $user)}
+                <span class="hoverdisplay">&nbsp;&nbsp;|&nbsp;&nbsp;
+                    <a style="cursor: pointer;" onclick="edit(68)">编辑</a>&nbsp;&nbsp;|&nbsp;&nbsp;
+                    <a style="cursor: pointer;" onclick="deletepost(68)">删除</a>&nbsp;&nbsp;|&nbsp;&nbsp;设置状态 &lt;
+                    <a style="cursor: pointer;" onclick="changepublic(68, 0)">公开</a> |
+                    <a style="cursor: pointer;" onclick="changepublic(68, 1)">登录可见</a> |
+                    <a style="cursor: pointer;" onclick="changepublic(68, 2)">仅作者可见</a>&gt;
+                 </span>
+                {/if}
+
+            </small>
+        </p>
+        <div class="message">{$vo.content|raw}</div>
+    </td>
+</tr>
+{/foreach}

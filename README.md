@@ -21,3 +21,8 @@
 原项目地址 https://github.com/kasuganosoras/Pigeon
 
 鸣谢: @kasuganosoras
+
+> 配置文件目录在 ./config 目录 导入sql文件夹中的sql 修改 database.php文件中的数据库信息后 即可运行
+
+
+

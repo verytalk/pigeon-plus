@@ -33,7 +33,7 @@ return [
     // 视图输出字符串内容替换
     // todo
     'tpl_replace_string'  =>  [
-        '__PUBLIC__'=>'http://wobuzhidao123.com/pigeon-plus/pigeon-plus/public/',
+        '__PUBLIC__'=>'/public/',
         '__ROOT__' => '/',
     ],
 ];

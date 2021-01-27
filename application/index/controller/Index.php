@@ -37,6 +37,11 @@ class Index extends Base{
 
         if (isset($_REQUEST['time']) && !empty($_REQUEST['time'])) {
             $time = strtotime($_REQUEST['time']);
+            if(empty($time)){
+              return $this->returnJsonData("", "查询时间不合法 .", "400");
+            }
+
+
             // $searchsql = " AND (POSITION('$search' IN `content`) OR POSITION('$search' IN `author`))";
             $searchSQL .= " AND time <= $time ";
         }

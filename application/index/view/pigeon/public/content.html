@@ -88,7 +88,7 @@
                 var responseJson =  $.parseJSON(htmlobj.responseText);
                 if(responseJson.status == "200"){
                     $("#newpost").val("");
-                    RefreshHome();
+                    resetPage();
                 }else{
                     alert(responseJson.msg);
                 }
@@ -107,6 +107,9 @@
     }
 
 
+    function resetPage(){
+        loadMoreCommon(1,"","search");
+    }
 
     function loadMoreCommon(page,id,type) {
         var html = "";
@@ -255,7 +258,7 @@
                 if(responseJson.status == "200"){
                     storage = '';
                     SuccessMsg(responseJson.msg);
-                    loadMore(1);
+                    resetPage();
                 }else{
                     ErrorMsg(responseJson.msg);
                 }
@@ -359,7 +362,7 @@
                     $("#editpost").val("");
                     storage = '';
                     SuccessMsg(responseData.msg);
-                    loadMore(1);
+                    resetPage();
                 }else{
                     ErrorMsg(responseData.msg);
                 }

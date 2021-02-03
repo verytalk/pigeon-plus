@@ -3,8 +3,6 @@
 namespace app\index\controller;
 
 use think\Db;
-use app\index\controller\Base;
-use \think\facade\Config;
 
 require_once './extend/public/parsedown.php';
 
